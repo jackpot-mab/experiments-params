@@ -1,0 +1,79 @@
+definitions:
+  model.Arm:
+    properties:
+      name:
+        type: string
+    type: object
+  model.Experiment:
+    properties:
+      arms:
+        items:
+          $ref: '#/definitions/model.Arm'
+        type: array
+      experimentId:
+        type: string
+      parameters: {}
+      policyType:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /experiment:
+    get:
+      consumes:
+      - application/json
+      description: Consults configuration DB to fetch experiment data.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: return experiment data
+      tags:
+      - experiments-params
+    post:
+      consumes:
+      - application/json
+      description: Create experiment in configuration db.
+      parameters:
+      - description: Experiment data
+        in: body
+        name: experiment
+        required: true
+        schema:
+          $ref: '#/definitions/model.Experiment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: creates experiment data and return experiment
+      tags:
+      - experiments-params
+    put:
+      consumes:
+      - application/json
+      description: Update configuration db with experiment data.
+      parameters:
+      - description: Experiment data
+        in: body
+        name: experiment
+        required: true
+        schema:
+          $ref: '#/definitions/model.Experiment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: updates experiment data and return experiment
+      tags:
+      - experiments-params
+swagger: "2.0"
