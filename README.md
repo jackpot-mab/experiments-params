@@ -1,14 +1,13 @@
-# arm-selector
+# experiments-params
 
-- This component is responsible for applying the experiment's policy to select the right arm.
-- Made with gin and gin-swagger
+- Retrieves experiment data from Configuration Data base.
 
-![arm-selector diagram](diagrams/arm-selector.drawio.png)
+![experiments-params diagram](diagrams/experiments-params.drawio.png)
 
 ## Explore
 
 ```
-http://localhost:8090/swagger/index.html
+http://localhost:8091/swagger/index.html
 ```
 
 ## Update swagger
