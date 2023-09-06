@@ -20,20 +20,6 @@ info:
   contact: {}
 paths:
   /experiment:
-    get:
-      consumes:
-      - application/json
-      description: Consults configuration DB to fetch experiment data.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      summary: return experiment data
-      tags:
-      - experiments-params
     post:
       consumes:
       - application/json
@@ -74,6 +60,27 @@ paths:
           schema:
             type: string
       summary: updates experiment data and return experiment
+      tags:
+      - experiments-params
+  /experiment/{experiment_id}:
+    get:
+      consumes:
+      - application/json
+      description: Consults configuration DB to fetch experiment data.
+      parameters:
+      - description: Experiment ID
+        in: path
+        name: experiment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: return experiment data
       tags:
       - experiments-params
 swagger: "2.0"

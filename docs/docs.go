@@ -17,27 +17,6 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/experiment": {
-            "get": {
-                "description": "Consults configuration DB to fetch experiment data.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "experiments-params"
-                ],
-                "summary": "return experiment data",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
             "put": {
                 "description": "Update configuration db with experiment data.",
                 "consumes": [
@@ -91,6 +70,38 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.Experiment"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/experiment/{experiment_id}": {
+            "get": {
+                "description": "Consults configuration DB to fetch experiment data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "experiments-params"
+                ],
+                "summary": "return experiment data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Experiment ID",
+                        "name": "experiment_id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {

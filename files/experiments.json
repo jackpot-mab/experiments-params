@@ -1,0 +1,39 @@
+[
+  {
+    "ExperimentId": "1-EG-2A",
+    "PolicyType": "epsilon-greedy",
+    "Arms": [
+      {
+        "Name": "picA"
+      },
+      {
+        "Name": "picB"
+      }
+    ],
+    "Parameters": {
+      "Alpha": 0.7
+    }
+  },
+  {
+    "ExperimentId": "2-UCB-5A",
+    "PolicyType": "ucb1",
+    "Arms": [
+      {
+        "Name": "arm1"
+      },
+      {
+        "Name": "arm2"
+      },
+      {
+        "Name": "arm3"
+      },
+      {
+        "Name": "arm4"
+      },
+      {
+        "Name": "arm5"
+      }
+    ]
+  }
+
+]

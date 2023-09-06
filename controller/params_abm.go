@@ -1,23 +1,33 @@
 package controller
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"jackpot-mab/experiments-params/db"
+	"net/http"
+)
+
+type ExperimentParamsController struct {
+	DAO db.ExperimentsDAO
+}
 
 // @BasePath /api/v1
 
-// ExperimentsParamsController godoc
+// GetExperiment godoc
 // @Summary return experiment data
 // @Schemes
 // @Description Consults configuration DB to fetch experiment data.
 // @Tags experiments-params
 // @Accept json
 // @Produce json
+// @Param experiment_id path string true "Experiment ID"
 // @Success 200 {string} Experiment
-// @Router /experiment [get]
-func ExperimentsParamsController(g *gin.Context) {
-
+// @Router /experiment/{experiment_id} [get]
+func (e *ExperimentParamsController) GetExperiment(g *gin.Context) {
+	experimentId := g.Param("experiment_id")
+	g.JSON(http.StatusOK, e.DAO.GetExperiment(experimentId))
 }
 
-// UpdateExperimentParametersController godoc
+// UpdateExperiment godoc
 // @Summary updates experiment data and return experiment
 // @Schemes
 // @Description Update configuration db with experiment data.
@@ -27,11 +37,11 @@ func ExperimentsParamsController(g *gin.Context) {
 // @Produce json
 // @Success 200 {string} Experiment
 // @Router /experiment [put]
-func UpdateExperimentParametersController(g *gin.Context) {
+func (e *ExperimentParamsController) UpdateExperiment(g *gin.Context) {
 
 }
 
-// AddExperimentParametersController godoc
+// AddExperiment godoc
 // @Summary creates experiment data and return experiment
 // @Schemes
 // @Description Create experiment in configuration db.
@@ -41,4 +51,4 @@ func UpdateExperimentParametersController(g *gin.Context) {
 // @Produce json
 // @Success 200 {string} Experiment
 // @Router /experiment [post]
-func AddExperimentParametersController(g *gin.Context) {}
+func (e *ExperimentParamsController) AddExperiment(g *gin.Context) {}
