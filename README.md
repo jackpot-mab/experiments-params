@@ -19,7 +19,7 @@ swag init
 ## Start sql container and run queries
 
 ```
-docker run --name mysql-container \
+docker run --name db \
     -e MYSQL_ROOT_PASSWORD=testroot \
     -e MYSQL_USER=jackpotian \
     -e MYSQL_PASSWORD=test \
@@ -36,4 +36,11 @@ DB_PORT=3307
 DB_USER=jackpotian
 DB_PASSWORD=test
 DB_NAME=experiment_db
+```
+
+### Build Docker image
+
+```
+docker build -t experiment-params .
+docker run -p 8091:8091 experiment-params
 ```

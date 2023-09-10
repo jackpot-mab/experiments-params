@@ -3,6 +3,8 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"jackpot-mab/experiments-params/db"
+	"jackpot-mab/experiments-params/model"
+	"log"
 	"net/http"
 )
 
@@ -51,4 +53,13 @@ func (e *ExperimentParamsController) UpdateExperiment(g *gin.Context) {
 // @Produce json
 // @Success 200 {string} Experiment
 // @Router /experiment [post]
-func (e *ExperimentParamsController) AddExperiment(g *gin.Context) {}
+func (e *ExperimentParamsController) AddExperiment(g *gin.Context) {
+	var experiment model.Experiment
+	if err := g.BindJSON(&experiment); err != nil {
+		log.Print("error occurred", err)
+		g.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	g.JSON(http.StatusOK, e.DAO.AddExperiment(experiment))
+}

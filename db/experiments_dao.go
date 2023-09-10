@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql" // Import the MySQL driver
 	"jackpot-mab/experiments-params/model"
@@ -51,23 +52,27 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 	if err != nil {
 		// TODO improve error handling.
 		log.Print(err)
+		return model.Experiment{}
 	}
 	defer experimentRow.Close()
 
 	// There shouldn't be more than one result.
-	experimentRow.Next()
-	var experiment model.Experiment
-	err = experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType, &experiment.Parameters)
+	for experimentRow.Next() {
+		var experiment model.Experiment
+		err = experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType, &experiment.Parameters)
 
-	if err != nil {
-		log.Print(err)
-		return model.Experiment{}
-	} else {
+		if err != nil {
+			log.Print(err)
+			return model.Experiment{}
+		} else {
 
-		experiment.Arms = e.getArms(experimentId)
+			experiment.Arms = e.getArms(experimentId)
+		}
+
+		return experiment
 	}
 
-	return experiment
+	return model.Experiment{}
 }
 
 func (e *ExperimentsDAOImpl) getArms(experimentId string) []model.Arm {
@@ -87,21 +92,48 @@ func (e *ExperimentsDAOImpl) getArms(experimentId string) []model.Arm {
 }
 
 func (e *ExperimentsDAOImpl) AddExperiment(create model.Experiment) model.Experiment {
-	return model.Experiment{
-		ExperimentId: "1-EEE-2A",
-		PolicyType:   "epsilon_greedy",
-		Arms:         []model.Arm{{Name: "A"}, {Name: "B"}, {Name: "C"}},
-		Parameters:   model.EpsilonGreedyParams{Alpha: 0.2},
+	stmt, err := e.db.Prepare(
+		"INSERT INTO experiment (experiment_id, policy_type, parameters) VALUES (?, ?, ?)")
+	if err != nil {
+		log.Print(err)
+		return model.Experiment{}
+	}
+	defer stmt.Close()
+
+	jsonParams, _ := json.Marshal(create.Parameters)
+	_, err = stmt.Exec(create.ExperimentId, create.PolicyType, jsonParams)
+	if err != nil {
+		log.Print(err)
+		return model.Experiment{}
+	}
+
+	e.addArms(create.Arms, create.ExperimentId)
+
+	return create
+}
+
+func (e *ExperimentsDAOImpl) addArms(arms []model.Arm, experimentId string) {
+	for _, a := range arms {
+		stmt, err := e.db.Prepare(
+			"INSERT INTO arm (experiment_id, name) VALUES (?, ?)")
+
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		_, err = stmt.Exec(experimentId, a.Name)
+
+		if err != nil {
+			log.Print(err)
+			return
+		}
 	}
 }
 
 func (e *ExperimentsDAOImpl) UpdateExperiment(update model.Experiment) model.Experiment {
-	return model.Experiment{
-		ExperimentId: "1-EEE-2A",
-		PolicyType:   "epsilon_greedy",
-		Arms:         []model.Arm{{Name: "A"}, {Name: "B"}, {Name: "C"}},
-		Parameters:   model.EpsilonGreedyParams{Alpha: 0.2},
-	}
+	// TODO
+	return model.Experiment{}
 }
 
 func (e *ExperimentsDAOImpl) Close() {
