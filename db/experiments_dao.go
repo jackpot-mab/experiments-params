@@ -59,7 +59,8 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 	// There shouldn't be more than one result.
 	for experimentRow.Next() {
 		var experiment model.Experiment
-		err = experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType, &experiment.Parameters)
+		var parameters interface{}
+		err = experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType, &parameters)
 
 		if err != nil {
 			log.Print(err)
@@ -68,6 +69,10 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 
 			experiment.Arms = e.getArms(experimentId)
 		}
+
+		jsonParameters := string(parameters.([]byte))
+
+		err = json.Unmarshal([]byte(jsonParameters), &experiment.Parameters)
 
 		return experiment
 	}
