@@ -101,6 +101,29 @@
                     }
                 }
             }
+        },
+        "/experiments": {
+            "get": {
+                "description": "Consults configuration DB to fetch experiments data.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "experiments-params"
+                ],
+                "summary": "return data from all experiments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

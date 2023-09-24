@@ -46,6 +46,8 @@ func main() {
 			eg.POST("/", experimentParamsController.AddExperiment)
 			eg.PUT("/", experimentParamsController.UpdateExperiment)
 		}
+
+		v1.GET("/experiments", experimentParamsController.GetExperiments)
 	}
 
 	router.GET("/", healthCheck)

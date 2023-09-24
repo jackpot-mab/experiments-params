@@ -14,6 +14,19 @@ type ExperimentParamsController struct {
 
 // @BasePath /api/v1
 
+// GetExperiments godoc
+// @Summary return data from all experiments
+// @Schemes
+// @Description Consults configuration DB to fetch experiments data.
+// @Tags experiments-params
+// @Accept json
+// @Produce json
+// @Success 200 {string} []Experiment
+// @Router /experiments [get]
+func (e *ExperimentParamsController) GetExperiments(g *gin.Context) {
+	g.JSON(http.StatusOK, e.DAO.GetAllExperiments())
+}
+
 // GetExperiment godoc
 // @Summary return experiment data
 // @Schemes

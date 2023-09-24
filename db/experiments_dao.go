@@ -10,6 +10,7 @@ import (
 )
 
 type ExperimentsDAO interface {
+	GetAllExperiments() []model.Experiment
 	GetExperiment(experimentId string) model.Experiment
 	AddExperiment(create model.Experiment) model.Experiment
 	UpdateExperiment(update model.Experiment) model.Experiment
@@ -134,6 +135,27 @@ func (e *ExperimentsDAOImpl) addArms(arms []model.Arm, experimentId string) {
 			return
 		}
 	}
+}
+
+func (e *ExperimentsDAOImpl) GetAllExperiments() []model.Experiment {
+	experimentIds, err := e.db.Query(
+		"SELECT experiment_id FROM experiment")
+	defer experimentIds.Close()
+
+	var experiments []model.Experiment
+
+	for experimentIds.Next() {
+		var id string
+		err = experimentIds.Scan(&id)
+		if err == nil {
+			exp := e.GetExperiment(id)
+			if exp.ExperimentId != "" {
+				experiments = append(experiments, e.GetExperiment(id))
+			}
+		}
+	}
+	return experiments
+
 }
 
 func (e *ExperimentsDAOImpl) UpdateExperiment(update model.Experiment) model.Experiment {

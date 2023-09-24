@@ -83,4 +83,19 @@ paths:
       summary: return experiment data
       tags:
       - experiments-params
+  /experiments:
+    get:
+      consumes:
+      - application/json
+      description: Consults configuration DB to fetch experiments data.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: return data from all experiments
+      tags:
+      - experiments-params
 swagger: "2.0"
