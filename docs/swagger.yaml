@@ -10,10 +10,10 @@ definitions:
         items:
           $ref: '#/definitions/model.Arm'
         type: array
-      experimentId:
+      experiment_id:
         type: string
       parameters: {}
-      policyType:
+      policy_type:
         type: string
     type: object
 info:

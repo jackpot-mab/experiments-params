@@ -18,6 +18,13 @@ docker run --name db \
     -d mysql:8.0
 ```
 
+#### Troubleshooting
+
+If you get a connection error with DBeaver, please use the following connection string:
+```
+jdbc:mysql://localhost:3307/experiment_db?allowPublicKeyRetrieval=true&useSSL=false
+```
+
 ### Set the following env variables or ask for the .env file
 
 ```

@@ -133,11 +133,11 @@ const docTemplate = `{
                         "$ref": "#/definitions/model.Arm"
                     }
                 },
-                "experimentId": {
+                "experiment_id": {
                     "type": "string"
                 },
                 "parameters": {},
-                "policyType": {
+                "policy_type": {
                     "type": "string"
                 }
             }
