@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"jackpot-mab/experiments-params/db"
 	"jackpot-mab/experiments-params/model"
@@ -70,9 +71,44 @@ func (e *ExperimentParamsController) AddExperiment(g *gin.Context) {
 	var experiment model.Experiment
 	if err := g.BindJSON(&experiment); err != nil {
 		log.Print("error occurred", err)
-		g.JSON(http.StatusInternalServerError, err)
+		g.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if !model.Validate(experiment) {
+		log.Print("invalid names, : is a forbidden character")
+		g.JSON(http.StatusBadRequest, errors.New("invalid experiment or branch name, "+
+			"it contains invalid characters").Error())
 		return
 	}
 
 	g.JSON(http.StatusOK, e.DAO.AddExperiment(experiment))
+}
+
+// AddOrUpdateParameter godoc
+// @Summary add a parameter to an experiment/arm or update the parameter value if already exists.
+// @Schemes
+// @Description add or create experiment/arm parameter
+// @Tags experiments-params
+// @Accept json
+// @Param experiment body model.RewardDataParameterUpsert true "Reward data parameter"
+// @Produce json
+// @Success 200 {string} error
+// @Router /experiment/parameter [post]
+func (e *ExperimentParamsController) AddOrUpdateParameter(g *gin.Context) {
+	var rewardDataParameter model.RewardDataParameterUpsert
+	if err := g.BindJSON(&rewardDataParameter); err != nil {
+		log.Print("error occurred", err)
+		g.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result := e.DAO.AddOrUpdateRewardParameter(rewardDataParameter)
+
+	if result == nil {
+		g.JSON(http.StatusOK, "updated ok")
+	}
+
+	g.JSON(http.StatusInternalServerError, result.Error())
+
 }

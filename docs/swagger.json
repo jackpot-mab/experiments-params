@@ -70,6 +70,40 @@
                 }
             }
         },
+        "/experiment/parameter": {
+            "post": {
+                "description": "add or create experiment/arm parameter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "experiments-params"
+                ],
+                "summary": "add a parameter to an experiment/arm or update the parameter value if already exists.",
+                "parameters": [
+                    {
+                        "description": "Reward data parameter",
+                        "name": "experiment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RewardDataParameter"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/experiment/{experiment_id}": {
             "get": {
                 "description": "Consults configuration DB to fetch experiment data.",
@@ -151,6 +185,21 @@
                 "policy_type": {
                     "type": "string"
                 }
+            }
+        },
+        "model.RewardDataParameter": {
+            "type": "object",
+            "properties": {
+                "arm": {
+                    "type": "string"
+                },
+                "experiment_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "value": {}
             }
         }
     }

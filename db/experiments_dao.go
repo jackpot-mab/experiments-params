@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql" // Import the MySQL driver
 	"jackpot-mab/experiments-params/model"
@@ -14,6 +15,9 @@ type ExperimentsDAO interface {
 	GetExperiment(experimentId string) model.Experiment
 	AddExperiment(create model.Experiment) model.Experiment
 	UpdateExperiment(update model.Experiment) model.Experiment
+	AddOrUpdateRewardParameter(
+		update model.RewardDataParameterUpsert) error
+	DeleteExperiment(experimentId string) error
 	Close()
 }
 
@@ -83,18 +87,54 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 
 func (e *ExperimentsDAOImpl) getArms(experimentId string) []model.Arm {
 	armsRows, err := e.db.Query(
-		"SELECT name FROM arm WHERE experiment_id = ?", experimentId)
+		"SELECT arm_id, name FROM arm WHERE experiment_id = ?", experimentId)
 	defer armsRows.Close()
 
 	var arms []model.Arm
 	for armsRows.Next() {
 		var arm model.Arm
-		err = armsRows.Scan(&arm.Name)
+		var armId int
+		err = armsRows.Scan(&armId, &arm.Name)
 		if err == nil {
+			arm.RewardDataParameters = e.getRewardDataParams(experimentId, armId)
 			arms = append(arms, arm)
 		}
 	}
 	return arms
+}
+
+func (e *ExperimentsDAOImpl) getRewardDataParams(experimentId string, armId int) []model.RewardDataParameter {
+	paramsRows, err := e.db.Query(
+		"SELECT param_name, param_value FROM reward_data_params WHERE experiment_id = ? and arm_id = ?", experimentId, armId)
+	defer paramsRows.Close()
+	var rewardDataParams []model.RewardDataParameter
+	for paramsRows.Next() {
+		var paramName, paramValue string
+		err = paramsRows.Scan(&paramName, &paramValue)
+		if err == nil {
+			rewardDataParams = append(rewardDataParams, model.RewardDataParameter{
+				Name:  paramName,
+				Value: paramValue,
+			})
+		}
+	}
+	return rewardDataParams
+}
+
+func (e *ExperimentsDAOImpl) getArmId(experimentId string, armName string) int {
+	armId, err := e.db.Query(
+		"SELECT arm_id FROM arm WHERE experiment_id = ? AND name = ?", experimentId, armName)
+	defer armId.Close()
+
+	var result int
+	armId.Next()
+
+	err = armId.Scan(&result)
+	if err != nil {
+		return -1
+	}
+
+	return result
 }
 
 func (e *ExperimentsDAOImpl) AddExperiment(create model.Experiment) model.Experiment {
@@ -168,4 +208,36 @@ func (e *ExperimentsDAOImpl) Close() {
 	if err != nil {
 		log.Print("Error closing db.")
 	}
+}
+
+func (e *ExperimentsDAOImpl) AddOrUpdateRewardParameter(
+	update model.RewardDataParameterUpsert) error {
+
+	// Prepare the INSERT statement
+	insertStmt, err := e.db.Prepare("REPLACE INTO reward_data_params (experiment_id, arm_id, param_name, param_value) VALUES (?, ?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer insertStmt.Close()
+	armId := e.getArmId(update.ExperimentId, update.ArmName)
+
+	if armId == -1 {
+		return errors.New("error fetching arm")
+	}
+
+	// Execute the INSERT statement
+	_, err = insertStmt.Exec(update.ExperimentId, armId, update.Name, update.Value)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+
+}
+
+func (e *ExperimentsDAOImpl) DeleteExperiment(experimentId string) error {
+	// DELETE PARAMETERS
+	// DELETE ARMS
+	// DELETE EXPERIMENT
+	return nil
 }

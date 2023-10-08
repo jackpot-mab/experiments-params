@@ -45,6 +45,7 @@ func main() {
 			eg.GET("/:experiment_id", experimentParamsController.GetExperiment)
 			eg.POST("/", experimentParamsController.AddExperiment)
 			eg.PUT("/", experimentParamsController.UpdateExperiment)
+			eg.POST("/parameter", experimentParamsController.AddOrUpdateParameter)
 		}
 
 		v1.GET("/experiments", experimentParamsController.GetExperiments)
