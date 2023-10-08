@@ -16,6 +16,16 @@ definitions:
       policy_type:
         type: string
     type: object
+  model.RewardDataParameter:
+    properties:
+      arm:
+        type: string
+      experiment_id:
+        type: string
+      name:
+        type: string
+      value: {}
+    type: object
 info:
   contact: {}
 paths:
@@ -81,6 +91,29 @@ paths:
           schema:
             type: string
       summary: return experiment data
+      tags:
+      - experiments-params
+  /experiment/parameter:
+    post:
+      consumes:
+      - application/json
+      description: add or create experiment/arm parameter
+      parameters:
+      - description: Reward data parameter
+        in: body
+        name: experiment
+        required: true
+        schema:
+          $ref: '#/definitions/model.RewardDataParameter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: add a parameter to an experiment/arm or update the parameter value
+        if already exists.
       tags:
       - experiments-params
   /experiments:
