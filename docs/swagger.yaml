@@ -3,6 +3,10 @@ definitions:
     properties:
       name:
         type: string
+      reward_data_parameters:
+        items:
+          $ref: '#/definitions/model.RewardDataParameter'
+        type: array
     type: object
   model.Experiment:
     properties:
@@ -12,11 +16,32 @@ definitions:
         type: array
       experiment_id:
         type: string
+      model_parameters:
+        $ref: '#/definitions/model.MLModelParameters'
       parameters: {}
       policy_type:
         type: string
     type: object
+  model.MLModelParameters:
+    properties:
+      input_features:
+        items:
+          type: string
+        type: array
+      model_type:
+        type: string
+      output_classes:
+        items:
+          type: string
+        type: array
+    type: object
   model.RewardDataParameter:
+    properties:
+      name:
+        type: string
+      value: {}
+    type: object
+  model.RewardDataParameterUpsert:
     properties:
       arm:
         type: string
@@ -104,7 +129,7 @@ paths:
         name: experiment
         required: true
         schema:
-          $ref: '#/definitions/model.RewardDataParameter'
+          $ref: '#/definitions/model.RewardDataParameterUpsert'
       produces:
       - application/json
       responses:

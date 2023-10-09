@@ -1,10 +1,11 @@
 package model
 
 type Experiment struct {
-	ExperimentId string      `json:"experiment_id"`
-	PolicyType   string      `json:"policy_type"`
-	Arms         []Arm       `json:"arms"`
-	Parameters   interface{} `json:"parameters"`
+	ExperimentId    string            `json:"experiment_id"`
+	PolicyType      string            `json:"policy_type"`
+	Arms            []Arm             `json:"arms"`
+	Parameters      interface{}       `json:"parameters"`
+	ModelParameters MLModelParameters `json:"model_parameters"`
 }
 
 type Arm struct {
@@ -17,7 +18,6 @@ type EpsilonGreedyParams struct {
 }
 
 type MLModelParameters struct {
-	ModelName     string   `json:"model_name"`
 	ModelType     string   `json:"model_type"`
 	InputFeatures []string `json:"input_features"`
 	OutputClasses []string `json:"output_classes"`

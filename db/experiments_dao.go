@@ -71,7 +71,7 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 			log.Print(err)
 			return model.Experiment{}
 		} else {
-
+			experiment.ModelParameters = e.getModelParameters(experimentId)
 			experiment.Arms = e.getArms(experimentId)
 		}
 
@@ -83,6 +83,28 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 	}
 
 	return model.Experiment{}
+}
+
+func (e *ExperimentsDAOImpl) getModelParameters(experimentId string) model.MLModelParameters {
+	modelParams, _ := e.db.Query(
+		"SELECT model_type, input_features, output_classes "+
+			"FROM model_params WHERE experiment_id = ?", experimentId)
+	defer modelParams.Close()
+
+	var mlModelParams model.MLModelParameters
+	for modelParams.Next() {
+		var inputFeaturesJson interface{}
+		var outputClassesJson interface{}
+		err := modelParams.Scan(&mlModelParams.ModelType, &inputFeaturesJson, &outputClassesJson)
+		err = json.Unmarshal(inputFeaturesJson.([]byte), &mlModelParams.InputFeatures)
+		err = json.Unmarshal(outputClassesJson.([]byte), &mlModelParams.OutputClasses)
+		if err != nil {
+			return model.MLModelParameters{}
+		}
+	}
+
+	return mlModelParams
+
 }
 
 func (e *ExperimentsDAOImpl) getArms(experimentId string) []model.Arm {
@@ -154,13 +176,35 @@ func (e *ExperimentsDAOImpl) AddExperiment(create model.Experiment) model.Experi
 	}
 
 	e.addArms(create.Arms, create.ExperimentId)
+	e.addModel(create)
 
 	return create
 }
 
+func (e *ExperimentsDAOImpl) addModel(experiment model.Experiment) {
+
+	stmt, err := e.db.Prepare(
+		"INSERT INTO model_params (experiment_id, model_type, input_features, output_classes) VALUES (?, ?, ?, ?)")
+	defer stmt.Close()
+
+	if err != nil {
+		return
+	}
+
+	marshallInputFeatures, _ := json.Marshal(experiment.ModelParameters.InputFeatures)
+	marshalOutputClasses, _ := json.Marshal(experiment.ModelParameters.OutputClasses)
+	_, err = stmt.Exec(experiment.ExperimentId,
+		experiment.ModelParameters.ModelType, marshallInputFeatures,
+		marshalOutputClasses)
+
+	if err != nil {
+		return
+	}
+}
+
 func (e *ExperimentsDAOImpl) addArms(arms []model.Arm, experimentId string) {
 	for _, a := range arms {
-		stmt, err := e.db.Prepare(
+		insertExperimentArmsStmt, err := e.db.Prepare(
 			"INSERT INTO arm (experiment_id, name) VALUES (?, ?)")
 
 		if err != nil {
@@ -168,7 +212,7 @@ func (e *ExperimentsDAOImpl) addArms(arms []model.Arm, experimentId string) {
 			return
 		}
 
-		_, err = stmt.Exec(experimentId, a.Name)
+		_, err = insertExperimentArmsStmt.Exec(experimentId, a.Name)
 
 		if err != nil {
 			log.Print(err)

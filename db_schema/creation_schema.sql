@@ -26,9 +26,8 @@ CREATE TABLE IF NOT EXISTS reward_data_params (
 
 CREATE TABLE IF NOT EXISTS model_params (
     experiment_id VARCHAR(250),
-    arm_id INT,
-    model_name VARCHAR,
-    model_type VARCHAR,
-    input_features TEXT,
-    output_classes TEXT
+    model_type VARCHAR(250),
+    input_features JSON,
+    output_classes JSON,
+    FOREIGN KEY (experiment_id) REFERENCES experiment(experiment_id)
 );

@@ -102,7 +102,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.RewardDataParameter"
+                            "$ref": "#/definitions/model.RewardDataParameterUpsert"
                         }
                     }
                 ],
@@ -178,6 +178,12 @@ const docTemplate = `{
             "properties": {
                 "name": {
                     "type": "string"
+                },
+                "reward_data_parameters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RewardDataParameter"
+                    }
                 }
             }
         },
@@ -193,13 +199,45 @@ const docTemplate = `{
                 "experiment_id": {
                     "type": "string"
                 },
+                "model_parameters": {
+                    "$ref": "#/definitions/model.MLModelParameters"
+                },
                 "parameters": {},
                 "policy_type": {
                     "type": "string"
                 }
             }
         },
+        "model.MLModelParameters": {
+            "type": "object",
+            "properties": {
+                "input_features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "model_type": {
+                    "type": "string"
+                },
+                "output_classes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "model.RewardDataParameter": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {}
+            }
+        },
+        "model.RewardDataParameterUpsert": {
             "type": "object",
             "properties": {
                 "arm": {
