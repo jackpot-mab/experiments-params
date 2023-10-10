@@ -29,5 +29,6 @@ CREATE TABLE IF NOT EXISTS model_params (
     model_type VARCHAR(250),
     input_features JSON,
     output_classes JSON,
+    PRIMARY KEY (experiment_id),
     FOREIGN KEY (experiment_id) REFERENCES experiment(experiment_id)
 );
