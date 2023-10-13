@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o exparams
+RUN go build -o experiments-params
 
 EXPOSE 8091
 
-CMD ["./exparams"]
+CMD ["./experiments-params"]

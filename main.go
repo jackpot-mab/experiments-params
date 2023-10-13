@@ -53,5 +53,5 @@ func main() {
 
 	router.GET("/", healthCheck)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-	router.Run("localhost:8091")
+	router.Run("0.0.0.0:8091")
 }
