@@ -59,3 +59,34 @@ swag init
 docker build -t experiment-params .
 docker run -p 8091:8091 experiment-params
 ```
+
+## Example experiment creation
+
+```
+curl -X 'POST' \
+  'http://localhost:8091/api/v1/experiment' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "arms": [
+    {
+      "name": "picture_1"
+    },
+    {
+      "name": "picture_2"
+    }
+  ],
+  "experiment_id": "test-xp",
+  "model_parameters": {
+    "input_features": [
+      "age"
+    ],
+    "model_type": "classification",
+    "output_classes": [
+      "0", "1"
+    ]
+  },
+  "parameters": "{}",
+  "policy_type": "epsilon_greedy"
+}'
+```
