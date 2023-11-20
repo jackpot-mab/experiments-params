@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerfiles "github.com/swaggo/files"
@@ -33,6 +34,7 @@ func main() {
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	router := gin.Default()
+	router.Use(cors.New(cors.Config{AllowOrigins: []string{"*"}}))
 
 	experimentParamsController := controller.ExperimentParamsController{
 		DAO: db.MakeExperimentsDAO(dbConnection),
