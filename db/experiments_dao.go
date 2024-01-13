@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Import the MySQL driver
 	"jackpot-mab/experiments-params/model"
 	"log"
+	"time"
 )
 
 type ExperimentsDAO interface {
@@ -42,8 +43,17 @@ func MakeExperimentsDAO(connection ConnectionParams) ExperimentsDAO {
 
 	db, err := sql.Open("mysql", connectionString)
 
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(time.Duration(3600) * time.Second)
+
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		//log.Fatal(err)
 	}
 
 	return &ExperimentsDAOImpl{db: db}
@@ -51,96 +61,79 @@ func MakeExperimentsDAO(connection ConnectionParams) ExperimentsDAO {
 
 func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment {
 
-	experimentRow, err := e.db.Query(
-		"SELECT experiment_id, policy_type, parameters FROM experiment WHERE experiment_id = ?", experimentId)
+	experimentRow, err := e.db.Query(`
+						SELECT e.experiment_id, e.policy_type, e.parameters,
+							   a.name,
+							   mp.model_type, mp.input_features, mp.output_classes,
+							   rdp.param_name, rdp.param_value 
+						FROM experiment e 
+						LEFT JOIN arm a on (a.experiment_id = e.experiment_id)
+						LEFT JOIN model_params mp on (mp.experiment_id = e.experiment_id)
+						LEFT JOIN reward_data_params rdp on (rdp.experiment_id = e.experiment_id and rdp.arm_id = a.arm_id)
+						WHERE e.experiment_id = ?`, experimentId)
 
 	if err != nil {
-		// TODO improve error handling.
 		log.Print(err)
 		return model.Experiment{}
 	}
 	defer experimentRow.Close()
 
-	// There shouldn't be more than one result.
+	experiment := &model.Experiment{}
+	var modelParams model.MLModelParameters
+	var arms []model.Arm
+	rewardDataParamsByArm := make(map[string][]model.RewardDataParameter)
+
 	for experimentRow.Next() {
-		var experiment model.Experiment
-		var parameters interface{}
-		err = experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType, &parameters)
 
-		if err != nil {
-			log.Print(err)
-			return model.Experiment{}
-		} else {
-			experiment.ModelParameters = e.getModelParameters(experimentId)
-			experiment.Arms = e.getArms(experimentId)
-		}
+		var arm model.Arm
+		var rewardDataParams model.RewardDataParameter
 
-		jsonParameters := string(parameters.([]byte))
-
-		err = json.Unmarshal([]byte(jsonParameters), &experiment.Parameters)
-
-		return experiment
-	}
-
-	return model.Experiment{}
-}
-
-func (e *ExperimentsDAOImpl) getModelParameters(experimentId string) model.MLModelParameters {
-	modelParams, _ := e.db.Query(
-		"SELECT model_type, input_features, output_classes "+
-			"FROM model_params WHERE experiment_id = ?", experimentId)
-	defer modelParams.Close()
-
-	var mlModelParams model.MLModelParameters
-	for modelParams.Next() {
+		var experimentParameters interface{}
 		var inputFeaturesJson interface{}
 		var outputClassesJson interface{}
-		err := modelParams.Scan(&mlModelParams.ModelType, &inputFeaturesJson, &outputClassesJson)
-		err = json.Unmarshal(inputFeaturesJson.([]byte), &mlModelParams.InputFeatures)
-		err = json.Unmarshal(outputClassesJson.([]byte), &mlModelParams.OutputClasses)
+
+		err := experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType,
+			&experimentParameters, &arm.Name, &modelParams.ModelType, &inputFeaturesJson, &outputClassesJson,
+			&rewardDataParams.Name, &rewardDataParams.Value)
+
 		if err != nil {
-			return model.MLModelParameters{}
+			return model.Experiment{}
 		}
-	}
 
-	return mlModelParams
+		err = json.Unmarshal(inputFeaturesJson.([]byte), &modelParams.InputFeatures)
+		err = json.Unmarshal(outputClassesJson.([]byte), &modelParams.OutputClasses)
+		err = json.Unmarshal(experimentParameters.([]byte), &experiment.Parameters)
 
-}
+		arms = append(arms, arm)
 
-func (e *ExperimentsDAOImpl) getArms(experimentId string) []model.Arm {
-	armsRows, err := e.db.Query(
-		"SELECT arm_id, name FROM arm WHERE experiment_id = ?", experimentId)
-	defer armsRows.Close()
+		_, ok := rewardDataParamsByArm[arm.Name]
 
-	var arms []model.Arm
-	for armsRows.Next() {
-		var arm model.Arm
-		var armId int
-		err = armsRows.Scan(&armId, &arm.Name)
-		if err == nil {
-			arm.RewardDataParameters = e.getRewardDataParams(experimentId, armId)
-			arms = append(arms, arm)
-		}
-	}
-	return arms
-}
-
-func (e *ExperimentsDAOImpl) getRewardDataParams(experimentId string, armId int) []model.RewardDataParameter {
-	paramsRows, err := e.db.Query(
-		"SELECT param_name, param_value FROM reward_data_params WHERE experiment_id = ? and arm_id = ?", experimentId, armId)
-	defer paramsRows.Close()
-	var rewardDataParams []model.RewardDataParameter
-	for paramsRows.Next() {
-		var paramName, paramValue string
-		err = paramsRows.Scan(&paramName, &paramValue)
-		if err == nil {
-			rewardDataParams = append(rewardDataParams, model.RewardDataParameter{
-				Name:  paramName,
-				Value: paramValue,
+		if !ok {
+			rewardDataParamsByArm[arm.Name] = []model.RewardDataParameter{{
+				Name:  rewardDataParams.Name,
+				Value: rewardDataParams.Value,
+			}}
+		} else {
+			rewardDataParamsByArm[arm.Name] = append(rewardDataParamsByArm[arm.Name], model.RewardDataParameter{
+				Name:  rewardDataParams.Name,
+				Value: rewardDataParams.Value,
 			})
 		}
+
 	}
-	return rewardDataParams
+
+	for _, arm := range arms {
+		allParams, ok := rewardDataParamsByArm[arm.Name]
+		if ok {
+			arm.RewardDataParameters = allParams
+		}
+	}
+
+	experiment.Arms = arms
+	experiment.ModelParameters = modelParams
+
+	return *experiment
+
 }
 
 func (e *ExperimentsDAOImpl) getArmId(experimentId string, armName string) int {
