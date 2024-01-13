@@ -88,13 +88,23 @@ func (e *ExperimentsDAOImpl) GetExperiment(experimentId string) model.Experiment
 		var arm model.Arm
 		var rewardDataParams model.RewardDataParameter
 
+		var paramName, paramVal sql.NullString
+
 		var experimentParameters interface{}
 		var inputFeaturesJson interface{}
 		var outputClassesJson interface{}
 
 		err := experimentRow.Scan(&experiment.ExperimentId, &experiment.PolicyType,
 			&experimentParameters, &arm.Name, &modelParams.ModelType, &inputFeaturesJson, &outputClassesJson,
-			&rewardDataParams.Name, &rewardDataParams.Value)
+			&paramName, &paramVal)
+
+		if paramName.Valid {
+			rewardDataParams.Name = paramName.String
+		}
+
+		if paramVal.Valid {
+			rewardDataParams.Value = paramVal.String
+		}
 
 		if err != nil {
 			return model.Experiment{}
