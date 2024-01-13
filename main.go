@@ -6,6 +6,7 @@ import (
 	"github.com/joho/godotenv"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"jackpot-mab/experiments-params/controller"
 	"jackpot-mab/experiments-params/db"
 	"jackpot-mab/experiments-params/docs"
@@ -35,6 +36,9 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{AllowOrigins: []string{"*"}}))
+
+	p := ginprometheus.NewPrometheus("gin")
+	p.Use(router)
 
 	experimentParamsController := controller.ExperimentParamsController{
 		DAO: db.MakeExperimentsDAO(dbConnection),
